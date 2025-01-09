@@ -1,6 +1,5 @@
 import csv
 import sys
-
 from collections import deque
 from util import Node, StackFrontier, QueueFrontier
 
@@ -92,35 +91,40 @@ def shortest_path(source, target):
 
     If no possible path, returns None.
     """
-    #initialize the frontier 
+    # Initialize the frontier with the starting point
     frontier = deque([(None, source)])
 
-    # dictionary to keep the track of we reached each person (using movie_id and person_id)
+    # Dictionary to track the path to each person
     came_from = {}
 
-    explored = set([source])
+    # Set to track explored nodes
+    explored = set()
 
     while frontier:
         movie_id, person_id = frontier.popleft()
 
-        # If we've reached the target, we can construct the path
+        # If we've reached the target, construct the path
         if person_id == target:
             path = []
             while person_id != source:
                 prev_movie_id, prev_person_id = came_from[person_id]
                 path.append((prev_movie_id, person_id))
                 person_id = prev_person_id
-            path.reverse() 
+            path.reverse()
             return path
-        
-        for neighbor_movie_id, neighbor_person_id in neighbors_for_person(person_id):
-            if neighbor_person_id not in explored:
-                explored.add(neighbor_person_id)
-                frontier.append((neighbor_movie_id, neighbor_person_id))
 
+        # Mark the current person as explored
+        explored.add(person_id)
+
+        # Add neighbors to the frontier
+        for neighbor_movie_id, neighbor_person_id in neighbors_for_person(person_id):
+            if neighbor_person_id not in explored and neighbor_person_id not in [p[1] for p in frontier]:
+                frontier.append((neighbor_movie_id, neighbor_person_id))
                 came_from[neighbor_person_id] = (neighbor_movie_id, person_id)
 
+    # If no connection is found
     return None
+
 
 def person_id_for_name(name):
     """
@@ -163,3 +167,4 @@ def neighbors_for_person(person_id):
 
 if __name__ == "__main__":
     main()
+
