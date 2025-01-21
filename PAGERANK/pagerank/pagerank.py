@@ -57,7 +57,27 @@ def transition_model(corpus, page, damping_factor):
     linked to by `page`. With probability `1 - damping_factor`, choose
     a link at random chosen from all pages in the corpus.
     """
-    raise NotImplementedError
+    model = {}
+
+    if damping_factor:
+        if len(corpus[page]) == 0:
+            probability = 1 / len(corpus)
+            for i in corpus:
+                model[i] = probability
+        else:
+            linked_pages = corpus[page]
+            for i in corpus:
+                if i in linked_pages:
+                    probability = DAMPING / len(linked_pages) + (1 - DAMPING) / len(corpus)
+                else:
+                    probability = (1 - DAMPING) / len(corpus)
+
+                model[i] = probability
+
+    if abs(sum(model.values()) - 1) > 1e-6:
+        raise ValueError("The sum of the probabilities is not equal to 1.")
+
+    return model
 
 
 def sample_pagerank(corpus, damping_factor, n):
@@ -69,7 +89,22 @@ def sample_pagerank(corpus, damping_factor, n):
     their estimated PageRank value (a value between 0 and 1). All
     PageRank values should sum to 1.
     """
-    raise NotImplementedError
+    count = {page: 0 for page in corpus}
+
+    page = random.choice(list(corpus.keys()))
+
+    for _ in range(n):
+        model = transition_model(corpus, page, damping_factor)
+        next_page = random.choices(list(model.keys()), weights=model.values())[0]
+
+        count[next_page] += 1
+        page = next_page
+
+    total_visits = sum(count.values())
+    for page in count:
+        count[page] /= total_visits
+
+    return count
 
 
 def iterate_pagerank(corpus, damping_factor):
@@ -81,8 +116,38 @@ def iterate_pagerank(corpus, damping_factor):
     their estimated PageRank value (a value between 0 and 1). All
     PageRank values should sum to 1.
     """
-    raise NotImplementedError
+    N = len(corpus)
+    page_ranks = {page: 1 / N for page in corpus}
+
+    threshold = 1e-6
+    delta = float('inf')
+
+    while delta > threshold:
+        new_page_ranks = {}
+        delta = 0
+
+        for page in corpus:
+            model = transition_model(corpus, page, damping_factor)
+            new_rank = (1 - damping_factor) / N  # Uniform probability part
+
+            # Add contributions from other pages linking to `page`
+            for other_page in corpus:
+                if page in corpus[other_page]:  # if `other_page` links to `page`
+                    new_rank += damping_factor * (page_ranks[other_page] / len(corpus[other_page]))
+
+            new_page_ranks[page] = new_rank
+            delta += abs(page_ranks[page] - new_rank)
+
+        page_ranks = new_page_ranks
+
+    # Normalize the final PageRanks
+    total_rank = sum(page_ranks.values())
+    for page in page_ranks:
+        page_ranks[page] /= total_rank
+
+    return page_ranks
 
 
 if __name__ == "__main__":
     main()
+
