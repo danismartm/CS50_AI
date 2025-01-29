@@ -52,7 +52,7 @@ class CrosswordCreator():
         """
         from PIL import Image, ImageDraw, ImageFont
         cell_size = 100
-        cell_border = 2
+        cell_border = 2 alsj 
         interior_size = cell_size - 2 * cell_border
         letters = self.letter_grid(assignment)
 
@@ -87,7 +87,7 @@ class CrosswordCreator():
 
         img.save(filename)
 
-    def solve(self):
+    def solve(self):  
         """
         Enforce node and arc consistency, and then solve the CSP.
         """
